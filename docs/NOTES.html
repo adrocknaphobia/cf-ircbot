@@ -1,0 +1,52 @@
+<h1>Some random notes about org.corfield.ircbot</h1>
+<p>The ircbot is implemented as a ColdFusion MX 7 event gateway on top of Paul Mutton's excellent <a href="http://www.jibble.org/pircbot.php">PircBot</a>.  The ircbot is released as open source under the Apache License, Version 2.0 (PircBot is released under the GPL - see <code>pircbot.jar</code> for details).</p>
+<p>Release 1.0 was a monolithic CFC. Release 1.1 is a more modular design that is easy to extend by write command CFCs. Want a <code>foobar</code> command? Simply write <code>foobar.cfc</code> with the appropriate <code>execute()</code> method. Release 1.1 implements most of its commands externally as CFCs.</p>
+<h2>Core behavior</h2>
+<p>The ircbot implements just <code>onIncomingMessage()</code> and uses that for all IRC event types. It could just as easily use multiple methods and maybe I'll refactor it that way for release 1.2.  It watches conversations and logs the last thing each person says, as well as all part / join / kick / quit events so that it can figure out when a given person was last seen on the channel and what they were doing.</p>
+<p>Normally, the ircbot only responds to direct commands (when addressed by name or using the <code>!</code> command shortcut). There are two exceptions to this:</p>
+<ul>
+  <li>when someone joins who has asked the ircbot to greet them and</li>
+  <li>when certain key phrases are mentioned (unless the ircbot has been told to keep quiet).  </li>
+</ul>
+<p>This core behavior is all built into <code>org/corfield/ircbot/IRCBot.cfc</code>. All other behavior is provided as extensions (commands).</p>
+<h2>The internal commands</h2>
+<p><code>greet</code>, <code>quiet</code> and <code>seen</code> are the only internal commands now. <code>stfu</code> is a synonym for <code>quiet</code> (as requested by fuzie). These are internal because they hook into standard operations that the ircbot performs (watching channel conversations and part/join events). </p>
+<p><code>!greet Hello Joe - welcome back</code> will cause the ircbot to remember that greeting (<code>Hello Joe - welcome back</code>) for the person issuing the command. When that person next joins the channel (triggering the <code>onjoin</code> event), the ircbot will respond with that greeting. </p>
+<p><code>!quiet</code> or <code>!quiet 20</code> will cause the ircbot to ignore the next 20 messages as far as key phrase interjections are concerned. <code>!quiet 0</code> resets the quiet period. This command allows people to stop the ircbot commenting on general channel conversation.</p>
+<p><code>!seen somenick</code> will cause the ircbot to respond with the last message that <code>somenick</code> said on channel (or the last event they triggered). </p>
+<h2>External command behavior</h2>
+<p>All external commands must implement the following method:</p>
+<pre>struct execute(any bot, struct event, string target, string args)</pre>
+<p>The method must return a struct with the following three fields:</p>
+<ul>
+  <li><code>response</code> - SILENT, ACTION or MESSAGE - how the ircbot should respond to this command</li>
+  <li><code>target</code> - who the ircbot should respond to (generally either <code>arguments.target</code> or <code>arguments.event.data.sender</code>)</li>
+  <li><code>message</code> - the message (or action) to respond with    </li>
+</ul>
+<p>The arguments to the <code>execute()</code> method are as follows:</p>
+<ul>
+  <li><code>bot</code> - the IRCBot instance (used to access the <code>getBotData()</code> / <code>getBotTerm()</code> / <code>setBotTerm()</code> / <code>say()</code> methods)</li>
+  <li><code>event</code> - the original event passed to the IRCBot gateway - in particular:
+    <ul>
+      <li><code>gatewayID</code> - the name of the event gateway (used in <code>getBotData()</code> / <code>getBotTerm()</code> / <code>setBotTerm()</code> / <code>say()</code> methods)  </li>
+      <li><code>data</code> - the package of data sent to the gateway which includes:
+        <ul>
+          <li><code>eventName</code> - the IRC event that triggered this command (<code>onmessage</code> or <code>onprivatemessage</code> usually)</li>
+          <li><code>channel</code> - the channel name for the event (or &quot;&quot; if this was a private message)  </li>
+          <li><code>sender</code> - the nickname of the person who invoked the ircbot for this request</li>
+          <li><code>message</code> - the original message text </li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li><code>target</code> - the channel name or private message nickname to respond to (in general)</li>
+  <li><code>args</code> - any arguments to the executed command</li>
+</ul>
+<h2>The help command</h2>
+<p>This (external) command loops over the CFCs in the commands directory and gets the <code>hint=</code> attribute from the <code>&lt;cfcomponent&gt;</code> tag to use as the summary line in the help messages. If a command's <code>&lt;cfcomponent&gt;</code> tag has the attribute <code>hidden=&quot;false&quot;</code>, the help command will ignore it unless you say <code>!help hidden</code>. Whilst it's easy enough to discover the hidden commands, it doesn't advertise them. <code>snapshot</code> and <code>restore</code> are implemented as hidden commands. In release 1.2 I may add a password (or other auth method) for certain 'system' commands.</p>
+<h2>The snapshot and restore commands</h2>
+<p>What are those actually for? The <code>know</code> and <code>greet</code> machinery writes the memory to disk on  every command which is expensive but relatively rare. The <code>seen</code> machinery tracks every single message and action on channel so you don't want that writing to disk every time. The <code>snapshot</code> and <code>restore</code> commands allow the seen log to be written to disk (and restored) so that the ircbot admin can snapshot the seen log, take the ircbot down for maintenance and then restore the seen log when the ircbot comes back up. It won't capture anything that happens between the snapshot and the restore so it isn't a perfect mechanism but at least the ircbot doesn't lose all its memory every time!</p>
+<h2>Performance</h2>
+<p>Wouldn't it be faster to implement the gateway as a fa&ccedil;ade with the main part of the ircbot implemented as a service CFC in <code>application</code> or <code>server</code> scope? I actually implemented it that way to test that hypothesis and the answer is: no, it is not significantly faster to implement it that way. There's no inheritance and no pseudo-constructor so instantiating <code>IRCBot</code> is reasonably fast. Given the level of traffic and network latency involved in an IRC bot like this, the extra complexity of the cached CFC instance just isn't worth it. </p>
+<h2>Thanks to...</h2>
+<p>The denizens of <code>#coldfusion</code> on DAL.net for their suggestions in making the ircbot what it is and in particular Joe Rinehart for the proof of concept command extension mechanism.  Keep the suggestions coming so I can keep improving the ircbot. </p>

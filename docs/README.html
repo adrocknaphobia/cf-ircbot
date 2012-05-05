@@ -1,0 +1,89 @@
+<pre>
+   IRCBot - An IRC bot built as a ColdFusion MX 7 event gateway
+   *** REQUIRES CFMX 7 DEVELOPER OR ENTERPRISE EDITION **
+
+   Copyright 2005 Sean A Corfield http://corfield.org/
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+   IRCBot uses PircBot http://www.jibble.org/pircbot.php by Paul Mutton
+
+   PircBot is released under the GNU Public License. A copy of pircbot.jar
+   is included in this distribution by permission of the author.
+
+Contents of this distribution:
+
+   ircbot/ - contains the source of the event gateway
+   org/
+      corfield/
+         ircbot/
+            IRCBot.cfc - example CFC to be used as a bot
+            seanbot.xml - example "memory" for the bot
+               (named after the event gateway instance name!)
+            commands/ - contains extensions to the bot
+               sample.cfc - an example command extension
+               *.cfc - various external commands
+   examples.jar - a pre-built version of the CFMX 7 event gateway examples
+   ircbot.cfg - an example configuration file
+   LICENSE.html - Apache License, Version 2.0
+   pircbot.jar - PircBot 1.4.0 (prebuilt, contains source)
+   README.html - this readme file!
+
+Changelog:
+
+   1.1.0 2005-11-25 Exposed all of the onXxx handlers as separate actions
+                    Moved bot to org.corfield.ircbot package
+                    Added a debug flag
+                    Exposed the configuration to the CFC
+                    Added commands extension point
+                    Rewrote most commands as extensions
+   1.0.0 2005-11-22 Initial version
+
+Installation:
+
+1. Simple binary installation:
+	a. Copy examples.jar to WEB-INF/cfusion/gateway/lib/
+		(make a backup of the original examples.jar first!)
+	b. Copy pircbot.jar to WEB-INF/cfusion/gateway/lib/
+	c. Copy the org/ directory to your webroot
+	d. Copy ircbot.cfg to your webroot
+	e. Restart your ColdFusion MX 7 Developer / Enterprise server
+	f. Define a new Gateway Type:
+		Type Name:       IRCBot
+		Description:     An IRC Bot
+		Java Class:      examples.ircbot.IRCBotGateway
+		Startup Timeout: 3000
+	g. Define a new Gateway Instance:
+		Gateway ID:         some name (must be valid in a filename)
+		Gateway Type:       IRCBot
+		CFC Path:           path to IRCBot.cfc
+		Configuration File: path to ircbot.cfg
+	h. Start the gateway!
+	
+2. Source installation (if you want to modify the the behavior of the bot):
+	a. Copy the ircbot/ folder to WEB-INF/cfusion/gateway/src/examples/
+		(alongside JMS, socket and watcher)
+	b. Copy pircbot.jar to WEB-INF/cfusion/gateway/lib/
+	c. Use ant to run build.xml in WEB-INF/cfusion/gateway/src/
+		The easiest way to do this is inside Eclipse!
+		You need to add two external JARs to the build parameters:
+			jrun.jar ({jrun.home}/lib/jrun.jar)
+			pircbot.jar (from step (b) above)
+		This replaces examples.jar in WEB-INF/cfusion/gateway/lib/
+	Now perform steps (c) thru (h) from (1) above.
+
+NOTE: I will not provide support for folks attempting the source installation!
+If you want to do that, learn how to use the Ant Build... commands in Eclipse!
+
+Read the source of IRCBot.cfc to figure out how to make it behave on channel :)
+</pre>

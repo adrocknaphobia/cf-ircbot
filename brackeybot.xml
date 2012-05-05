@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dictionary>
+	<key name="sean">an architect</key>
+	<key name="seanbot">a ColdFusion MX 7 event gateway</key>
+	<key name="coldfusion">a great scripting language</key>
+	<key name="cfmx7bot">a ColdFusion MX 7 event gateway</key>
+	<greeting name="seancorfield">Hi Sean! Welcome back!</greeting>
+	<key name="the url of coldspring">http://coldspringframework.org</key>
+	<command name="bye">say #from# waves bye-bye to #args#!</command>
+	<command name="trout">do slaps #args# with a large trout!</command>
+</dictionary>
